@@ -49,9 +49,39 @@ for i in range( len( dd['data_vars']['pm2p5_conc']['data'] ) ): #for each time
     
     df = df.stack().reset_index() #Table to long list
     df.columns = ['lat','lon','values']
-    print( dd['coords']['time']['data'][i] ) #Format time. It is not correct now!
-    df['time'] = dd['coords']['time']['data'][i]
+    toto = str( dd['coords']['time']['data'][i] ).split(':')[0]
+    df['time'] = int(toto)
     
     dfo = dfo.append( df )
 
+#%%
+
+dft = dfo[ dfo.time == 0 ]
+dft
+
+
+# %% Plotting - Remove this section
+
+import folium
+
+dfo['values'] = dfo['values'].astype(float)
+dfo['values'] = dfo['values'].round( 3 )
+
+m = folium.Map(
+    location=[ dfo['lat'].mean() , dfo['lon'].mean() ],
+    tiles='Stamen Toner',
+    zoom_start=9
+)
+
+
+for i,r in dfo[ dfo.time == 0 ].iterrows(): 
+    folium.Circle(
+        radius=r['values'] * 200,
+        location=[ r['lat'], r['lon'] ],
+        color='crimson',
+        tooltip = r['values'],
+        fill=False,
+    ).add_to(m)
+
+m
 # %%
