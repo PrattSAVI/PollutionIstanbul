@@ -5,6 +5,7 @@ import netCDF4
 import xarray as xr
 import pandas as pd
 import datetime as dt
+import folium
 #%% Setup variables for Query
 
 times = [str(i).zfill(2) + ':00' for i in range(0,24)] #Each hour from 00 to 23
@@ -59,15 +60,62 @@ for i in range( len( dd['data_vars']['pm2p5_conc']['data'] ) ): #for each time
 dft = dfo[ dfo.time == 0 ]
 dft
 
-# %% Plotting - Remove this section
+# %% Export Data to CSV fro further Processing ( Delete )
+# Can I increase the reolution of the grid. 
 
-import folium
+import geopandas as gpd
 
-dft['values'] = dft['values'].astype(float)
-dft['values'] = dft['values'].round( 3 )
+gdf = gpd.GeoDataFrame(
+    dft, geometry=gpd.points_from_xy(dft.lon, dft.lat))
 
-#Get Bounding Bo Coordinates
-bb = [ dft['lat'].min() , dft['lon'].min() , dft['lat'].max() , dft['lon'].max() ]
+#gdf.to_file( r'C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\ADS_Points.shp')
+
+# %% Increase Resolution using INverse Weighted Average of a Grid
+
+import numpy as np 
+
+grid = gpd.read_file( r"C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\Grid_64.shp" )
+centers = grid.centroid
+
+def haversine(coord1, coord2): #Calculate Distance in Meters
+    import math
+    lon1, lat1 = coord1
+    lon2, lat2 = coord2
+    R = 6371000  # radius of Earth in meters
+    phi_1 = math.radians(lat1)
+    phi_2 = math.radians(lat2)
+
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi_1) * math.cos(phi_2) * math.sin(delta_lambda / 2.0) ** 2
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    meters = R * c  # output distance in meters
+    meters = round(meters)
+    return meters
+
+wa = []
+for i1,r1 in centers.iteritems():
+    dist = []
+    for i2,r2 in gdf.iterrows(): #Calculate the distanve of ech grid center to each measuement point
+        t = haversine( (r1.x,r1.y) , (r2.geometry.x,r2.geometry.y) )
+        dist.append( [t , r2['values']] )
+
+    temp = pd.DataFrame( data = dist , columns = ['dist','value'])
+    temp = temp[ temp['dist'] != 0 ] #Not itself
+    temp = temp.sort_values(by='dist',ascending=True)[:32] #Closest 32
+    temp['inv_dist'] = 1/temp['dist']
+
+    weighted_avg = np.average(temp['value'].tolist(), weights=temp['inv_dist'].tolist() )
+    wa.append( weighted_avg )
+
+cents = gpd.GeoDataFrame( data = wa , geometry = grid.geometry , columns = ['values'] )
+cents['id'] = [i for i in range(len(cents)) ]
+cents.head(4)
+
+# %% Verify Data For Point Data
 
 m = folium.Map(
     location=[ dft['lat'].mean() , dft['lon'].mean() ],
@@ -75,18 +123,48 @@ m = folium.Map(
     zoom_start=10
 )
 
-
-for i,r in dft.iterrows(): 
+for i,r in cents.iterrows(): 
     folium.Circle(
         radius=r['values'] * 200,
-        location=[ r['lat'], r['lon'] ],
-        color='crimson',
+        location=[ r.geometry.y, r.geometry.x ],
+        color='blue',
         tooltip = r['values'],
         fill=True,
     ).add_to(m)
 
-#Zoom to bounds
+bb = [ dft['lat'].min() , dft['lon'].min() , dft['lat'].max() , dft['lon'].max() ]
 m.fit_bounds([ [bb[0],bb[1]], [bb[2],bb[3]] ]) # Fit map to bounds of the polygon data
 
 m
+
+#%%
+cents.crs = {'init' :'epsg:4326'}
+
+m = folium.Map(
+    location=[ dft['lat'].mean() , dft['lon'].mean() ],
+    tiles='Stamen Toner',
+    zoom_start=10
+)
+
+folium.Choropleth(
+    geo_data = cents[['id','geometry']] ,
+    name='choropleth',
+    data = cents[['id','values']] ,
+    columns=['id','values'],
+    key_on='feature.id',
+    fill_color='YlGn',
+    fill_opacity=0.7,
+    line_opacity=0.2,
+    legend_name='pm25',
+    highlight= True
+).add_to(m)
+
+folium.LayerControl().add_to(m)
+
+m
+
+# %%
+import sys
+print (sys.prefix)
+
 # %%
