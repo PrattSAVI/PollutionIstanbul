@@ -59,29 +59,34 @@ for i in range( len( dd['data_vars']['pm2p5_conc']['data'] ) ): #for each time
 dft = dfo[ dfo.time == 0 ]
 dft
 
-
 # %% Plotting - Remove this section
 
 import folium
 
-dfo['values'] = dfo['values'].astype(float)
-dfo['values'] = dfo['values'].round( 3 )
+dft['values'] = dft['values'].astype(float)
+dft['values'] = dft['values'].round( 3 )
+
+#Get Bounding Bo Coordinates
+bb = [ dft['lat'].min() , dft['lon'].min() , dft['lat'].max() , dft['lon'].max() ]
 
 m = folium.Map(
-    location=[ dfo['lat'].mean() , dfo['lon'].mean() ],
+    location=[ dft['lat'].mean() , dft['lon'].mean() ],
     tiles='Stamen Toner',
-    zoom_start=9
+    zoom_start=10
 )
 
 
-for i,r in dfo[ dfo.time == 0 ].iterrows(): 
+for i,r in dft.iterrows(): 
     folium.Circle(
         radius=r['values'] * 200,
         location=[ r['lat'], r['lon'] ],
         color='crimson',
         tooltip = r['values'],
-        fill=False,
+        fill=True,
     ).add_to(m)
+
+#Zoom to bounds
+m.fit_bounds([ [bb[0],bb[1]], [bb[2],bb[3]] ]) # Fit map to bounds of the polygon data
 
 m
 # %%
