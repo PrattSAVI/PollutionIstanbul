@@ -73,6 +73,16 @@
         h3 {
             font-weight: bold;
         }
+        
+        #overlay {
+            position: absolute;
+            margin-top: 20px;
+            margin-left: 10px;
+            margin-bottom: 10px;
+            width: 33%;
+            background-color: aliceblue;
+            opacity: 0.65;
+        }
     </style>
 
 </head>
@@ -81,6 +91,7 @@
 
     <!--Map is Here-->
     <div id='map' style='width: 100%; height: 600px;'></div>
+    <div id='overlay'></div>
 
 </body>
 
@@ -95,7 +106,7 @@
 
     map.on('load', function() {
         map.addSource('pollution', {
-            'type': 'geojson',
+            'type': 'geojson', // file type
             'data': 'https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/data/IstanbulPollution.geojson'
         });
 
@@ -108,7 +119,7 @@
                     'interpolate', ['linear'],
                     ['get', 'values'],
                     0, '#2a9d8f',
-                    12, '#e9c46a',
+                    12, '#e9c46a', // yellow at health risk level.
                     24, '#f4a261',
                     40, '#e76f51',
                 ],
