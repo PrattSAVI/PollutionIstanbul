@@ -55,7 +55,7 @@ for i in range( len( dd['data_vars']['pm2p5_conc']['data'] ) ): #for each time
     
     dfo = dfo.append( df )
 
-#%%
+#%% For a single Time
 
 dft = dfo[ dfo.time == 0 ]
 dft
@@ -68,7 +68,6 @@ import geopandas as gpd
 gdf = gpd.GeoDataFrame(
     dft, geometry=gpd.points_from_xy(dft.lon, dft.lat))
 
-#gdf.to_file( r'C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\ADS_Points.shp')
 
 # %% Increase Resolution using INverse Weighted Average of a Grid
 
@@ -113,58 +112,15 @@ for i1,r1 in centers.iteritems():
 
 cents = gpd.GeoDataFrame( data = wa , geometry = grid.geometry , columns = ['values'] )
 cents['id'] = [i for i in range(len(cents)) ]
+cents.crs = {'init' :'epsg:4326'}
 cents.head(4)
 
-# %% Verify Data For Point Data
-
-m = folium.Map(
-    location=[ dft['lat'].mean() , dft['lon'].mean() ],
-    tiles='Stamen Toner',
-    zoom_start=10
-)
-
-for i,r in cents.iterrows(): 
-    folium.Circle(
-        radius=r['values'] * 200,
-        location=[ r.geometry.y, r.geometry.x ],
-        color='blue',
-        tooltip = r['values'],
-        fill=True,
-    ).add_to(m)
-
-bb = [ dft['lat'].min() , dft['lon'].min() , dft['lat'].max() , dft['lon'].max() ]
-m.fit_bounds([ [bb[0],bb[1]], [bb[2],bb[3]] ]) # Fit map to bounds of the polygon data
-
-m
-
 #%%
-cents.crs = {'init' :'epsg:4326'}
 
-m = folium.Map(
-    location=[ dft['lat'].mean() , dft['lon'].mean() ],
-    tiles='Stamen Toner',
-    zoom_start=10
-)
-
-folium.Choropleth(
-    geo_data = cents[['id','geometry']] ,
-    name='choropleth',
-    data = cents[['id','values']] ,
-    columns=['id','values'],
-    key_on='feature.id',
-    fill_color='YlGn',
-    fill_opacity=0.7,
-    line_opacity=0.2,
-    legend_name='pm25',
-    highlight= True
-).add_to(m)
-
-folium.LayerControl().add_to(m)
-
-m
+cents.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution.geojson',driver="GeoJSON")
+# %%
+cents.head(4)
 
 # %%
-import sys
-print (sys.prefix)
-
+cents['values'].max() , cents['values'].min()
 # %%
