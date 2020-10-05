@@ -75,7 +75,7 @@
         h3 {
             font-family: 'Assistant';
             font-size: 20px;
-            font-weight: bold;
+            font-weight: 900;
         }
         
         #inner {
@@ -86,10 +86,32 @@
         
         .sidebar {
             position: absolute;
+            padding-bottom: 10px;
             top: 25px;
             left: 25px;
             z-index: 1;
             background-color: rgba(248, 248, 255, 0.75);
+        }
+        
+        .dropcontents {
+            background-color: #f9f9f9;
+            width: 160px;
+            z-index: 2;
+            font-family: 'Assistant';
+            font-size: 13px;
+        }
+        
+        .dropdown-content {
+            background-color: #f9f9f9;
+            min-width: 100px;
+            z-index: 2;
+            font-family: 'Assistant';
+            font-size: 13px;
+        }
+        
+        .dropdown-content option {
+            font-family: 'Assistant';
+            font-size: 13px;
         }
     </style>
 
@@ -103,7 +125,7 @@
             <h3>ISTANBUL KIRLILIK HARITASI</h3>
             <p id='text'>
                 This map is produced to display the air quality conditions in Istanbul in daily bases. This map displays a few variants of air quality measurements.
-                <br>Original data is provided in 10km by 10km resolution. For display purposes, the resolution is adjusted using IDW method for each cell. Aggregation method can be viewed <a href="https://github.com/PrattSAVI/PollutionIstanbul/blob/master/Python_Request/Pollution_Copernicus.py">here</a>.
+                <br><br>Original data is provided in 10km by 10km resolution. For display purposes, the resolution is adjusted using IDW method for each cell. Aggregation method can be viewed <a href="https://github.com/PrattSAVI/PollutionIstanbul/blob/master/Python_Request/Pollution_Copernicus.py">here</a>.
             </p>
             <ul>
                 <li id='text'>Fine particle matter (PM 2.5), <a href="https://en.wikipedia.org/wiki/Particulate_pollution">wiki</a></li>
@@ -111,39 +133,31 @@
                 <li id='text'>Dust</li>
             </ul>
 
-            <p id='text'>Here is the main page for the data : <a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/home'>ADS</a></p>
-            <p id='text'>The dowload and API source is here: <a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form'>Air Quality Forecasts</a></p>
+            <p id='text'><a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/home'>ADS</a> data source</p>
+            <p id='text'>The dowload and API source is <a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form'>here</a>.</p>
+            <hr>
+            <p id="text">Select an Air Quality Indicator</p>
+            <select class="dropcontents" id="indicatorSelector" onchange="leaveChange()">
+                <div class="dropdown-content">
+                    <option value="pm2p5_conc" selected="selected" >PM 2.5</option>
+                    <option value="no2_conc" >NO2</option>
+                    <option value="dust" >Dust</option>
+                </div>
+            </select>
+
+            <p id="text">Select a Time to Display</p>
+            <select class="dropcontents" id="timeSelector" onchange="leaveChange()">
+                <div class="dropdown-content">
+                    <option value="0" >Yesterday (Analysis)</option>
+                    <option value="1 day" selected="selected" >Today(Forecast)</option>
+                </div>
+            </select>
+
             <hr>
             <p id='mini-text'>Web Mapping by <a href='https://commons.pratt.edu/savi/' target="_tab">SAVI.</a></p>
             <p id='mini-text'>If you are intereseted in web mapping, please find the python code used to create this map <a href='https://github.com/PrattSAVI/PollutionIstanbul' target="_tab">here.</a></p>
+
         </div>
-
-        <hr>
-        <p id='text'>Select the air quality indicator you would like to view.</p>
-        <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Air Quality Indicator
-            </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
-                <h6 class="dropdown-header">Select an indicator</h6>
-                <button class="dropdown-item" type='button'>Fine Particle</button>
-                <button class="dropdown-item" type='button'>NO2</button>
-                <button class="dropdown-item" type='button'>Dust</button>
-            </div>
-        </div>
-
-        <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Time
-            </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <button class="dropdown-item" type='button'>Today</button>
-                <button class="dropdown-item" type='button'>Yesterday</button>
-            </div>
-        </div>
-
-        <br>
-
     </div>
 
     <div id='map' style='width: 100%; height: 800px;'></div>
@@ -152,6 +166,29 @@
 </body>
 
 <script>
+    //Get User Inputs here
+    var e = document.getElementById('indicatorSelector')
+    var indy = e.options[e.selectedIndex].value
+    console.log(indy);
+    document.getElementById('indicatorSelector').onchange = function() {
+        var e = document.getElementById("indicatorSelector");
+        indy = e.options[e.selectedIndex].value
+        console.log(indy);
+    };
+
+    var e = document.getElementById('timeSelector')
+    var time1 = e.options[e.selectedIndex].value
+    console.log(time1);
+    document.getElementById('timeSelector').onchange = function() {
+        var e = document.getElementById("timeSelector");
+        time1 = e.options[e.selectedIndex].value
+        console.log(time1);
+    };
+
+
+
+
+    // Mapping Starts Here
     mapboxgl.accessToken = 'pk.eyJ1IjoiY2Fua2FkaXIiLCJhIjoiY2pteXplNnEzMHF3YTNrcGx0dGd4MmJrdiJ9.zbhQ39YIdfZufTljuTSl1w';
     var map = new mapboxgl.Map({
         container: 'map',
@@ -174,10 +211,10 @@
                 'fill-color': [
                     'interpolate', ['linear'],
                     ['get', 'values'],
-                    0, '#2a9d8f',
-                    12, '#e9c46a', // yellow at health risk level.
-                    24, '#f4a261',
-                    40, '#e76f51',
+                    5, '#279185',
+                    //12, '#e9c46a', // yellow at health risk level.
+                    25, '#F0852D',
+                    40, '#D7431D',
                 ],
                 'fill-opacity': 0.75
             }
