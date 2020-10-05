@@ -11,6 +11,7 @@
     <link href='https://fonts.googleapis.com/css?family=Assistant' rel='stylesheet'>
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
@@ -72,15 +73,21 @@
         }
         
         h3 {
+            font-family: 'Assistant';
+            font-size: 20px;
             font-weight: bold;
         }
         
-        #overlay {
-            position: absolute;
-            margin-top: 20px;
+        #inner {
             margin-left: 10px;
-            margin-bottom: 10px;
-            width: 33%;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+        
+        .sidebar {
+            position: absolute;
+            top: 25px;
+            left: 25px;
             z-index: 1;
             background-color: rgba(248, 248, 255, 0.75);
         }
@@ -91,8 +98,55 @@
 <body>
 
     <!--Map is Here-->
-    <div id='overlay'></div>
-    <div id='map' style='width: 100%; height: 600px;'></div>
+    <div class="sidebar col-xs-6 col-sm-3 col-lg-2">
+        <div id="inner">
+            <h3>ISTANBUL KIRLILIK HARITASI</h3>
+            <p id='text'>
+                This map is produced to display the air quality conditions in Istanbul in daily bases. This map displays a few variants of air quality measurements.
+                <br>Original data is provided in 10km by 10km resolution. For display purposes, the resolution is adjusted using IDW method for each cell. Aggregation method can be viewed <a href="https://github.com/PrattSAVI/PollutionIstanbul/blob/master/Python_Request/Pollution_Copernicus.py">here</a>.
+            </p>
+            <ul>
+                <li id='text'>Fine particle matter (PM 2.5), <a href="https://en.wikipedia.org/wiki/Particulate_pollution">wiki</a></li>
+                <li id='text'>NO2, causing asthma</li>
+                <li id='text'>Dust</li>
+            </ul>
+
+            <p id='text'>Here is the main page for the data : <a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/home'>ADS</a></p>
+            <p id='text'>The dowload and API source is here: <a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form'>Air Quality Forecasts</a></p>
+            <hr>
+            <p id='mini-text'>Web Mapping by <a href='https://commons.pratt.edu/savi/' target="_tab">SAVI.</a></p>
+            <p id='mini-text'>If you are intereseted in web mapping, please find the python code used to create this map <a href='https://github.com/PrattSAVI/PollutionIstanbul' target="_tab">here.</a></p>
+        </div>
+
+        <hr>
+        <p id='text'>Select the air quality indicator you would like to view.</p>
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Air Quality Indicator
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                <h6 class="dropdown-header">Select an indicator</h6>
+                <button class="dropdown-item" type='button'>Fine Particle</button><br>
+                <button class="dropdown-item" type='button'>NO2</button><br>
+                <button class="dropdown-item" type='button'>Dust</button>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Time
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <p class="dropdown-item">Todays Forecast</p>
+                <p class="dropdown-item">Yesterday</p>
+            </div>
+        </div>
+
+        <br>
+
+    </div>
+
+    <div id='map' style='width: 100%; height: 800px;'></div>
 
 
 </body>
