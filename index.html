@@ -177,10 +177,33 @@
 
     console.log(time1,indy);
 
+    var min_val = 15;
+    var med_val = 25;
+    var max_val = 40;
+
     //Filtering Function
+    // Define min, medium and max levels for choropleth application
+    // Adjust the medium value to be EU standarts.
     function filterBy(indy,time1) {
         var filters = ["all",['==', 'ind', indy] , ['==', 'time', time1]];
         map.setFilter('pollution', filters);
+
+        if(indy === 'pm2p5_conc'){
+            min_val = 15;
+            med_val = 25;
+            max_val = 40;
+        } else if(indy === 'no2_conc'){
+            min_val = 0;
+            med_val = 50;
+            max_val = 65;
+        }else if(indy === 'dust'){
+            min_val = 0;
+            med_val = 3;
+            max_val = 10;
+        }
+        console.log( min_val, med_val, max_val )
+
+
         }
 
     // Mapping Starts Here
@@ -196,13 +219,13 @@
         function(err,data){
             if (err) throw err;
 
-            console.log( "Data Loaded!");
             //Add geojson to map as data -------------------
             map.addSource('pollution', {
                 'type': 'geojson',
                 data: data
                 });
 
+            console.log( "Data is Loaded!!!")
             //Add Pollution layer as data----------------------
             map.addLayer({
                 'id': 'pollution',
@@ -212,9 +235,9 @@
                     'fill-color': [
                         'interpolate', ['linear'],
                         ['get', 'values'],
-                        5, '#279185',
-                        25, '#F0852D',
-                        40, '#D7431D',
+                        min_val, '#279185',
+                        med_val, '#F0852D',
+                        max_val, '#D7431D',
                     ],
                     'fill-opacity': 0.70
                 },
@@ -237,6 +260,8 @@
                 filterBy( indy , time1 );
             };
 
+            console.log( data )
+            
 
         }
     )

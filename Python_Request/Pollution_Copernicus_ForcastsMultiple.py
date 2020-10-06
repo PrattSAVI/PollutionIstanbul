@@ -34,10 +34,7 @@ c.retrieve(
         'type': 'analysis', #How does 'forecast' work, there is one forcast per day.
         'time': '00:00',
         'leadtime_hour': '0',
-        'area': [
-            41.48, 28.17, 40.67,
-            29.85,
-        ],
+        'area': [ 41.59, 28.15 , 40.54 , 30.34 ],
         'format': 'netcdf',
     }, file_path )
 
@@ -60,6 +57,14 @@ for ind in dd['data_vars'].keys(): #For each Indicator
         df['ind'] = ind
         
         dfo = dfo.append( df )
+#%%
+
+print( dfo['time'].unique() )
+print( dfo['ind'].unique() )
+
+#%%
+
+dfo[ dfo['ind']=='dust']['values'].hist()
 
 # %% Export Data to CSV fro further Processing 
 # Increase Resolution using INverse Weighted Average of a Grid
@@ -67,7 +72,7 @@ for ind in dd['data_vars'].keys(): #For each Indicator
 import geopandas as gpd
 import numpy as np 
 
-grid = gpd.read_file( r"C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\Grid_64.shp" )
+grid = gpd.read_file( r"C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\Grid_64_Larger.shp" )
 centers = grid.centroid
 
 def haversine(coord1, coord2): #Calculate Distance in Meters
@@ -119,12 +124,6 @@ for ind in dfo['ind'].unique():
         df_all = df_all.append( cents )
         print( time , ind )
 
-
-
-#%%
-
-
-dfo['time'].unique()
 
 #%%
 df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
