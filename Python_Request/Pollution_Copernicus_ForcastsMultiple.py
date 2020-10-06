@@ -17,7 +17,7 @@ yesterday = (dt.datetime.now()-dt.timedelta(days=2)).strftime( '%Y-%m-%d' )
 dates = yesterday + '/' + today #From yesterday to today, how to get fro tomorrow.
 
 dates
-#%% Query API
+#%% Query API , Convert to dictionary. Saves NetCDF file locally and accesses it again. 
 #https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form
 
 c = cdsapi.Client()
@@ -42,6 +42,7 @@ ds_disk = xr.open_dataset( file_path )
 dd = ds_disk.to_dict() #Convert to dict to convert to pandas
 
 #%% Convert 4D data to long Pandas List.
+# Continue using dfo as long list dataframe
 dfo = pd.DataFrame(columns = ['lat','lon','ind','time','values']) #Empty long list
 for ind in dd['data_vars'].keys(): #For each Indicator
     for i in range( len( dd['data_vars'][ind]['data'] ) ): #for each time
@@ -57,13 +58,11 @@ for ind in dd['data_vars'].keys(): #For each Indicator
         df['ind'] = ind
         
         dfo = dfo.append( df )
-#%%
+#%% Check dates and indicators. 
+# Check ranges for each indicator. 
 
 print( dfo['time'].unique() )
 print( dfo['ind'].unique() )
-
-#%%
-
 dfo[ dfo['ind']=='dust']['values'].hist()
 
 # %% Export Data to CSV fro further Processing 
@@ -125,6 +124,9 @@ for ind in dfo['ind'].unique():
         print( time , ind )
 
 
-#%%
+#%% Save file. Commit and Push to Github Manually. 
+# WGS84 hexagon geometry
 df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
 
+
+# %%
