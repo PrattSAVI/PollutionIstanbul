@@ -130,3 +130,7 @@ df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\Istan
 
 
 # %%
+
+dfo[ dfo['ind']=='dust']['values'].hist()
+
+# %%

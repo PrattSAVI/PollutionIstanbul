@@ -175,7 +175,7 @@
     var e = document.getElementById('timeSelector')
     var time1 = e.options[e.selectedIndex].value
 
-    console.log(time1,indy);
+    //console.log(time1,indy);
 
     var min_val = 15;
     var med_val = 25;
@@ -201,7 +201,7 @@
             med_val = 1;
             max_val = 10;
         }
-        console.log( min_val, med_val, max_val )
+        //console.log( min_val, med_val, max_val )
 
 
         }
@@ -215,37 +215,37 @@
         zoom: 9 // starting zoom
     });
 
-    //[ 41.59, 28.15 , 40.54 , 30.34 ]
+    //Fit to Istanbul
     map.fitBounds([ [28.59 , 41.36], [ 30.15 , 40.71 ] ]);
 
     d3.json( 'https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/data/IstanbulPollution_all.geojson',
         function(err,data){
             if (err) throw err;
 
-            //Add geojson to map as data -------------------
-            map.addSource('pollution', {
-                'type': 'geojson',
-                data: data
-                });
+            map.on('load'){
+                //Add geojson to map as data -------------------
+                map.addSource('pollution', {
+                    'type': 'geojson',
+                    data: data
+                    });
 
-            console.log( "Data is Loaded!!!")
-            //Add Pollution layer as data----------------------
-            map.addLayer({
-                'id': 'pollution',
-                'source': 'pollution',
-                'type': 'fill',
-                'paint': {
-                    'fill-color': [
-                        'interpolate', ['linear'],
-                        ['get', 'values'],
-                        min_val, '#279185',
-                        med_val, '#F0852D',
-                        max_val, '#D7431D',
-                    ],
-                    'fill-opacity': 0.65
-                },
-            });
-            
+                //Add Pollution layer as data----------------------
+                map.addLayer({
+                    'id': 'pollution',
+                    'source': 'pollution',
+                    'type': 'fill',
+                    'paint': {
+                        'fill-color': [
+                            'interpolate', ['linear'],
+                            ['get', 'values'],
+                            min_val, '#279185',
+                            med_val, '#F0852D',
+                            max_val, '#D7431D',
+                        ],
+                        'fill-opacity': 0.65
+                    },
+                });
+            }
 
             filterBy( indy , time1); // Initiate map with default selections
 
@@ -262,9 +262,6 @@
                 console.log(indy);
                 filterBy( indy , time1 );
             };
-
-            console.log( data )
-            
 
         }
     )
