@@ -198,7 +198,7 @@
             max_val = 65;
         }else if(indy === 'dust'){
             min_val = 0;
-            med_val = 3;
+            med_val = 1;
             max_val = 10;
         }
         console.log( min_val, med_val, max_val )
@@ -214,6 +214,9 @@
         center: [29.0, 41.05], // starting position [lng, lat]
         zoom: 9 // starting zoom
     });
+
+    //[ 41.59, 28.15 , 40.54 , 30.34 ]
+    map.fitBounds([ [28.59 , 41.36], [ 30.15 , 40.71 ] ]);
 
     d3.json( 'https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/data/IstanbulPollution_all.geojson',
         function(err,data){
@@ -239,7 +242,7 @@
                         med_val, '#F0852D',
                         max_val, '#D7431D',
                     ],
-                    'fill-opacity': 0.70
+                    'fill-opacity': 0.65
                 },
             });
             
