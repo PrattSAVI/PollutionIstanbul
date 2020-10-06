@@ -215,14 +215,16 @@
         zoom: 9 // starting zoom
     });
 
+    map.on('load', function() {
+
     //Fit to Istanbul
-    map.fitBounds([ [28.59 , 41.36], [ 30.15 , 40.71 ] ]);
+        map.fitBounds([ [28.59 , 41.36], [ 30.15 , 40.71 ] ]);
 
-    d3.json( 'https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/data/IstanbulPollution_all.geojson',
-        function(err,data){
-            if (err) throw err;
+        d3.json( 'https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/data/IstanbulPollution_all.geojson',
+            function(err,data){
+                if (err) throw err;
 
-            map.on('load'){
+                
                 //Add geojson to map as data -------------------
                 map.addSource('pollution', {
                     'type': 'geojson',
@@ -245,26 +247,26 @@
                         'fill-opacity': 0.65
                     },
                 });
+                
+                filterBy( indy , time1); // Initiate map with default selections
+
+                document.getElementById('timeSelector').onchange = function() { // Time
+                    var e = document.getElementById("timeSelector");
+                    time1 = e.options[e.selectedIndex].value
+                    console.log(time1);
+                    filterBy( indy , time1 );
+                };
+
+                document.getElementById('indicatorSelector').onchange = function() { //Indicator
+                    var e = document.getElementById("indicatorSelector");
+                    indy = e.options[e.selectedIndex].value
+                    console.log(indy);
+                    filterBy( indy , time1 );
+                };
+
             }
-
-            filterBy( indy , time1); // Initiate map with default selections
-
-            document.getElementById('timeSelector').onchange = function() { // Time
-                var e = document.getElementById("timeSelector");
-                time1 = e.options[e.selectedIndex].value
-                console.log(time1);
-                filterBy( indy , time1 );
-            };
-
-            document.getElementById('indicatorSelector').onchange = function() { //Indicator
-                var e = document.getElementById("indicatorSelector");
-                indy = e.options[e.selectedIndex].value
-                console.log(indy);
-                filterBy( indy , time1 );
-            };
-
-        }
-    )
+        )
+    })
 
 
 
