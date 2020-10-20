@@ -8,12 +8,10 @@ import datetime as dt
 import folium
 #%% Setup variables for Query
 
-times = [str(i).zfill(2) + ':00' for i in range(0,24)] #Each hour from 00 to 23
-
 #Data is only available starting from yesterday.
-today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
+#today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
 today = dt.datetime.now().strftime( '%Y-%m-%d' )
-yesterday = (dt.datetime.now()-dt.timedelta(days=2)).strftime( '%Y-%m-%d' )
+yesterday = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
 dates = yesterday + '/' + today #From yesterday to today, how to get fro tomorrow.
 
 dates
@@ -27,11 +25,13 @@ c.retrieve(
     'cams-europe-air-quality-forecasts',
     {
         'variable': [
-            'dust', 'nitrogen_dioxide', 'particulate_matter_2.5um'],
+            'carbon_monoxide', 'dust', 'nitrogen_dioxide',
+            'particulate_matter_2.5um', 'pm2.5_anthropogenic_fossil_fuel_carbon',
+        ],
         'model': 'ensemble',
         'level': '0',
         'date': dates ,
-        'type': 'analysis', #How does 'forecast' work, there is one forcast per day.
+        'type': 'forecast', #How does 'forecast' work, there is one forcast per day.
         'time': '00:00',
         'leadtime_hour': '0',
         'area': [ 41.59, 28.15 , 40.54 , 30.34 ],
@@ -58,11 +58,9 @@ for ind in dd['data_vars'].keys(): #For each Indicator
         df['ind'] = ind
         
         dfo = dfo.append( df )
-#%% Check dates and indicators. 
-# Check ranges for each indicator. 
 
-print( dfo['time'].unique() )
-print( dfo['ind'].unique() )
+print( dfo['time'].unique().tolist() )
+print( dfo['ind'].unique().tolist() )
 dfo[ dfo['ind']=='dust']['values'].hist()
 
 # %% Export Data to CSV fro further Processing 
