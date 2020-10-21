@@ -5,7 +5,7 @@ import netCDF4
 import xarray as xr
 import pandas as pd
 import datetime as dt
-import folium
+
 #%% Setup variables for Query
 
 #Data is only available starting from yesterday.
@@ -25,7 +25,7 @@ c.retrieve(
     'cams-europe-air-quality-forecasts',
     {
         'variable': [
-            'carbon_monoxide', 'dust', 'nitrogen_dioxide',
+            'carbon_monoxide', 'nitrogen_dioxide',
             'particulate_matter_2.5um', 'pm2.5_anthropogenic_fossil_fuel_carbon',
         ],
         'model': 'ensemble',
@@ -33,7 +33,7 @@ c.retrieve(
         'date': dates ,
         'type': 'forecast', #How does 'forecast' work, there is one forcast per day.
         'time': '00:00',
-        'leadtime_hour': '0',
+        'leadtime_hour': '7',
         'area': [ 41.59, 28.15 , 40.54 , 30.34 ],
         'format': 'netcdf',
     }, file_path )
@@ -61,7 +61,7 @@ for ind in dd['data_vars'].keys(): #For each Indicator
 
 print( dfo['time'].unique().tolist() )
 print( dfo['ind'].unique().tolist() )
-dfo[ dfo['ind']=='dust']['values'].hist()
+dfo[ dfo['ind']=='pm2p5_conc']['values'].hist()
 
 # %% Export Data to CSV fro further Processing 
 # Increase Resolution using INverse Weighted Average of a Grid
@@ -106,7 +106,7 @@ for ind in dfo['ind'].unique():
 
             temp = pd.DataFrame( data = dist , columns = ['dist','value'])
             temp = temp[ temp['dist'] != 0 ] #Not itself
-            temp = temp.sort_values(by='dist',ascending=True)[:32] #Closest 32
+            temp = temp.sort_values(by='dist',ascending=True)[:19] #Closest 32
             temp['inv_dist'] = 1/temp['dist']
 
             weighted_avg = np.average(temp['value'].tolist(), weights=temp['inv_dist'].tolist() )
@@ -127,8 +127,5 @@ for ind in dfo['ind'].unique():
 df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
 
 
-# %%
-
-dfo[ dfo['ind']=='dust']['values'].hist()
 
 # %%

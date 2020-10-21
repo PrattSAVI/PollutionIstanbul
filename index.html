@@ -53,19 +53,12 @@
             z-index: 0;
         }
         
-        .sidebar {
-            position: absolute;
-            top: 25px;
-            left: 25px;
-            z-index: 1;
-            background-color: rgba(248, 248, 255, 0.75);
-        }
-        
         .rightbar {
             position: absolute;
             top: 25px;
             right: 25px;
             z-index: 1;
+            padding-bottom: 20px;
             background-color: rgba(248, 248, 255, 0.75);
         }
         
@@ -84,6 +77,46 @@
             margin-right: 10px;
             margin-bottom: 15px;
             opacity: 0.8;
+        }
+        
+        #bar-out {
+            top: 0;
+            position: relative;
+            margin-left: 2px;
+            margin-right: 2px;
+            height: 40px;
+            z-index: 1;
+        }
+        
+        #lines {
+            top: 0;
+            position: absolute;
+            width: 100%;
+            height: 25px;
+        }
+        
+        #lines .vl {
+            position: absolute;
+            border-left: 1px solid black;
+            height: 25px;
+            z-index: 2;
+        }
+        
+        #bar {
+            width: 100%;
+            height: 20px;
+            background-image: linear-gradient( 90.0deg, #279185 3%, #F0852D 50%, #D7431D 97%);
+            opacity: 0.8;
+        }
+        
+        .leg {
+            position: absolute;
+            font-family: 'Assistant';
+            font-size: 10px;
+        }
+        
+        #legend-text {
+            margin-top: 7px;
         }
         
         h3 {
@@ -155,7 +188,8 @@
                 <div class="dropdown-content">
                     <option value="pm2p5_conc" selected="selected" >PM 2.5</option>
                     <option value="no2_conc" >NO2</option>
-                    <option value="dust" >Dust</option>
+                    <option value="co_conc" >CO</option>
+                    <option value="ecff_conc" >Fosil Yakit</option>
                 </div>
             </select>
 
@@ -173,9 +207,27 @@
 
         </div>
     </div>
-
+    <!--Rightbar is Here-->
     <div class="rightbar col-xs-6 col-sm-3 col-lg-2">
         <p id='text_change'>Testing,Testing,Testing</p>
+        <div id='legend'>
+            <p id='text'> Legend</p>
+            <div id='bar-out'>
+
+                <div id='bar'></div>
+                <div id="lines">
+                    <div class="vl" style="left:0%"></div>
+                    <div class="vl" style="left:50%"></div>
+                    <div class="vl" style="left:100%"></div>
+                </div>
+                <div id="legend-text">
+                    <p class="leg" id="legend-min" style="left: 0%;">A</p>
+                    <p class="leg" id="legend-med" style="left: 50%;">B</p>
+                    <p class="leg" id="legend-max" style="left: 100%;">C</p>
+                </div>
+
+            </div>
+        </div>
     </div>
 
     <!--Map is Here-->
@@ -192,13 +244,15 @@
     var e = document.getElementById('timeSelector')
     var time1 = e.options[e.selectedIndex].value
 
-    //console.log(time1,indy);
-
+    //Initialize all values.
     var min_val = 15;
     var med_val = 25;
     var max_val = 40;
-    var desc = "The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight .[60] Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children.[61] Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
+    var desc = "<h5>PM 2.5</h5>The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight .[60] Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children.[61] Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
     document.getElementById('text_change').innerHTML = desc;
+    document.getElementById('legend-min').innerHTML = min_val;
+    document.getElementById('legend-med').innerHTML = med_val;
+    document.getElementById('legend-max').innerHTML = max_val;
 
 
     //Filtering Function
@@ -214,22 +268,21 @@
             min_val = 15;
             med_val = 25;
             max_val = 40;
-            desc = "The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight .[60] Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children.[61] Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
+            desc = "<h5>PM 2.5</h5>The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight. Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children. Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
         } else if (indy === 'no2_conc') {
             min_val = 0;
             med_val = 50;
             max_val = 65;
-            desc = "For the public, chronic exposure to NO2 can cause respiratory effects including airway inflammation in healthy people and increased respiratory symptoms in people with asthma. NO2 creates ozone which causes eye irritation and exacerbates respiratory conditions, leading to increased visits to emergency departments and hospital admissions for respiratory issues, especially asthma.";
-        } else if (indy === 'dust') {
-            min_val = 0;
-            med_val = 1;
-            max_val = 10;
-            desc = "Bildigin toz iste bu"
+            desc = "<h5>NO2</h5>For the public, chronic exposure to NO2 can cause respiratory effects including airway inflammation in healthy people and increased respiratory symptoms in people with asthma. NO2 creates ozone which causes eye irritation and exacerbates respiratory conditions, leading to increased visits to emergency departments and hospital admissions for respiratory issues, especially asthma.";
+        } else if (indy === 'co_conc') {
+            min_val = 125;
+            med_val = 160;
+            max_val = 185;
+            desc = "<h5>CO</h5>Karbon Monoksit. Bunun Avrupa veya Amerikan standartlari icin kabul edilebilir degerini bulmak gerekiyor."
         }
-        //console.log( min_val, med_val, max_val )
-
-
     }
+
+
 
     // Mapping Starts Here
     mapboxgl.accessToken = 'pk.eyJ1IjoiY2Fua2FkaXIiLCJhIjoiY2pteXplNnEzMHF3YTNrcGx0dGd4MmJrdiJ9.zbhQ39YIdfZufTljuTSl1w';
@@ -291,6 +344,9 @@
                     console.log(indy);
                     filterBy(indy, time1);
                     document.getElementById('text_change').innerHTML = desc;
+                    document.getElementById('legend-min').innerHTML = min_val;
+                    document.getElementById('legend-med').innerHTML = med_val;
+                    document.getElementById('legend-max').innerHTML = max_val;
                 };
 
             }
