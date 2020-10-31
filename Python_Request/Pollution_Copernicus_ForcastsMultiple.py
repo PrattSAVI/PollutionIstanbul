@@ -6,12 +6,11 @@ import xarray as xr
 import pandas as pd
 import datetime as dt
 
-#%% Setup variables for Query
-
+#Setup variables for Query
 #Data is only available starting from yesterday.
 #today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
-today = dt.datetime.now().strftime( '%Y-%m-%d' )
-yesterday = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
+today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
+yesterday = (dt.datetime.now()-dt.timedelta(days=3)).strftime( '%Y-%m-%d' )
 dates = yesterday + '/' + today #From yesterday to today, how to get fro tomorrow.
 
 dates
@@ -19,21 +18,20 @@ dates
 #https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form
 
 c = cdsapi.Client()
-file_path = r'C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\test.nc' #Saving Locally For Now
+file_path = r'C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\test_12.nc' #Saving Locally For Now
 
 c.retrieve(
     'cams-europe-air-quality-forecasts',
     {
         'variable': [
-            'carbon_monoxide', 'nitrogen_dioxide',
-            'particulate_matter_2.5um', 'pm2.5_anthropogenic_fossil_fuel_carbon',
+            'carbon_monoxide', 'nitrogen_dioxide', 'particulate_matter_2.5um'
         ],
         'model': 'ensemble',
         'level': '0',
         'date': dates ,
-        'type': 'forecast', #How does 'forecast' work, there is one forcast per day.
-        'time': '00:00',
-        'leadtime_hour': '7',
+        'type': 'analysis', #How does 'forecast' work, there is one forcast per day.
+        'time': [ '12:00','21:00','23:00'] ,
+        'leadtime_hour': '0',
         'area': [ 41.59, 28.15 , 40.54 , 30.34 ],
         'format': 'netcdf',
     }, file_path )
@@ -43,6 +41,9 @@ dd = ds_disk.to_dict() #Convert to dict to convert to pandas
 
 #%% Convert 4D data to long Pandas List.
 # Continue using dfo as long list dataframe
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 dfo = pd.DataFrame(columns = ['lat','lon','ind','time','values']) #Empty long list
 for ind in dd['data_vars'].keys(): #For each Indicator
     for i in range( len( dd['data_vars'][ind]['data'] ) ): #for each time
@@ -59,9 +60,13 @@ for ind in dd['data_vars'].keys(): #For each Indicator
         
         dfo = dfo.append( df )
 
-print( dfo['time'].unique().tolist() )
 print( dfo['ind'].unique().tolist() )
-dfo[ dfo['ind']=='pm2p5_conc']['values'].hist()
+
+for i in dfo['ind'].unique().tolist():
+    plt.title( i )
+    sns.violinplot(data = dfo[dfo['ind']==i], x='time', y='values' , lw = 0)
+    plt.xticks( rotation=90)
+    plt.show()
 
 # %% Export Data to CSV fro further Processing 
 # Increase Resolution using INverse Weighted Average of a Grid
@@ -84,16 +89,16 @@ def haversine(coord1, coord2): #Calculate Distance in Meters
     delta_lambda = math.radians(lon2 - lon1)
 
     a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi_1) * math.cos(phi_2) * math.sin(delta_lambda / 2.0) ** 2
-
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     meters = R * c  # output distance in meters
     meters = round(meters)
     return meters
 
-df_all = gpd.GeoDataFrame()
+df_all = gpd.GeoDataFrame() #Empty Dataframe
 for ind in dfo['ind'].unique():
     for time in dfo['time'].unique():
+        print( time , ind )
         dft = dfo[ (dfo.ind == ind) & (dfo.time == time) ]
         gdf = gpd.GeoDataFrame(dft, geometry=gpd.points_from_xy(dft.lon, dft.lat))
 
@@ -106,7 +111,7 @@ for ind in dfo['ind'].unique():
 
             temp = pd.DataFrame( data = dist , columns = ['dist','value'])
             temp = temp[ temp['dist'] != 0 ] #Not itself
-            temp = temp.sort_values(by='dist',ascending=True)[:19] #Closest 32
+            temp = temp.sort_values(by='dist',ascending=True)[:16] #Closest 32
             temp['inv_dist'] = 1/temp['dist']
 
             weighted_avg = np.average(temp['value'].tolist(), weights=temp['inv_dist'].tolist() )
@@ -119,9 +124,16 @@ for ind in dfo['ind'].unique():
         cents['ind'] = ind
         
         df_all = df_all.append( cents )
-        print( time , ind )
+        
 
+#%% Correct time
 
+dfo['day'] = [r.split(',')[0] if ',' in r else None for i,r in dfo['time'].iteritems() ]
+dfo['day'] = dfo['day'].fillna( '0 day' )
+
+dfo['hour'] = [r.split(',')[1] if ',' in r else r for i,r in dfo['time'].iteritems() ]
+
+dfo.sample(5)
 #%% Save file. Commit and Push to Github Manually. 
 # WGS84 hexagon geometry
 df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
