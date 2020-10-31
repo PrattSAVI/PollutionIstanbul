@@ -10,7 +10,7 @@ import datetime as dt
 #Data is only available starting from yesterday.
 #today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
 today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
-yesterday = (dt.datetime.now()-dt.timedelta(days=3)).strftime( '%Y-%m-%d' )
+yesterday = (dt.datetime.now()-dt.timedelta(days=2)).strftime( '%Y-%m-%d' )
 dates = yesterday + '/' + today #From yesterday to today, how to get fro tomorrow.
 
 dates
@@ -62,11 +62,19 @@ for ind in dd['data_vars'].keys(): #For each Indicator
 
 print( dfo['ind'].unique().tolist() )
 
-for i in dfo['ind'].unique().tolist():
-    plt.title( i )
-    sns.violinplot(data = dfo[dfo['ind']==i], x='time', y='values' , lw = 0)
-    plt.xticks( rotation=90)
-    plt.show()
+
+#%% Correct time
+
+dfo['day'] = [r.split(',')[0] if ',' in r else None for i,r in dfo['time'].iteritems() ]
+dfo['day'] = dfo['day'].fillna( '0 day' )
+
+dfo['hour'] = [r.split(',')[1] if ',' in r else r for i,r in dfo['time'].iteritems() ]
+dfo = dfo.drop('time' , axis = 1)
+
+dfo = dfo[['lat','lon','ind','day','values']].groupby( ['lat','lon','ind','day'] ).mean().reset_index()
+
+dfo.sample(5)
+
 
 # %% Export Data to CSV fro further Processing 
 # Increase Resolution using INverse Weighted Average of a Grid
@@ -95,49 +103,52 @@ def haversine(coord1, coord2): #Calculate Distance in Meters
     meters = round(meters)
     return meters
 
-df_all = gpd.GeoDataFrame() #Empty Dataframe
-for ind in dfo['ind'].unique():
-    for time in dfo['time'].unique():
-        print( time , ind )
-        dft = dfo[ (dfo.ind == ind) & (dfo.time == time) ]
-        gdf = gpd.GeoDataFrame(dft, geometry=gpd.points_from_xy(dft.lon, dft.lat))
+def make_long( dfo , grid , centers ): # Intrepolate and make a long list
+    df_all = gpd.GeoDataFrame() #Empty Dataframe
 
-        wa = []
-        for i1,r1 in centers.iteritems():
-            dist = []
-            for i2,r2 in gdf.iterrows(): #Calculate the distanve of ech grid center to each measuement point
-                t = haversine( (r1.x,r1.y) , (r2.geometry.x,r2.geometry.y) )
-                dist.append( [t , r2['values']] )
+    for ind in dfo['ind'].unique():
+        for time in dfo['day'].unique():
+            print( time , ind )
+            dft = dfo[ (dfo.ind == ind) & (dfo.day == time) ]
+            gdf = gpd.GeoDataFrame(dft, geometry=gpd.points_from_xy(dft.lon, dft.lat))
 
-            temp = pd.DataFrame( data = dist , columns = ['dist','value'])
-            temp = temp[ temp['dist'] != 0 ] #Not itself
-            temp = temp.sort_values(by='dist',ascending=True)[:16] #Closest 32
-            temp['inv_dist'] = 1/temp['dist']
+            wa = []
+            for i1,r1 in centers.iteritems():
+                dist = []
+                for i2,r2 in gdf.iterrows(): #Calculate the distanve of ech grid center to each measuement point
+                    t = haversine( (r1.x,r1.y) , (r2.geometry.x,r2.geometry.y) )
+                    dist.append( [t , r2['values']] )
 
-            weighted_avg = np.average(temp['value'].tolist(), weights=temp['inv_dist'].tolist() )
-            wa.append( weighted_avg )
+                temp = pd.DataFrame( data = dist , columns = ['dist','value'])
+                temp = temp[ temp['dist'] != 0 ] #Not itself
+                temp = temp.sort_values(by='dist',ascending=True)[:16] #Closest 32
+                temp['inv_dist'] = 1/temp['dist']
 
-        cents = gpd.GeoDataFrame( data = wa , geometry = grid.geometry , columns = ['values'] )
-        cents.crs = {'init' :'epsg:4326'}
-        cents['id'] = [i for i in range(len(cents)) ]
-        cents['time'] = time
-        cents['ind'] = ind
+                weighted_avg = np.average(temp['value'].tolist(), weights=temp['inv_dist'].tolist() )
+                wa.append( weighted_avg )
+
+            cents = gpd.GeoDataFrame( data = wa , geometry = grid.geometry , columns = ['values'] )
+            cents.crs = {'init' :'epsg:4326'}
+            cents['id'] = [i for i in range(len(cents)) ]
+            cents['time'] = time
+            cents['ind'] = ind
+            
+            df_all = df_all.append( cents )
+    return df_all
+
+df_all = make_long( dfo , grid , centers )
+df_all.sample( 5 )
         
-        df_all = df_all.append( cents )
-        
-
-#%% Correct time
-
-dfo['day'] = [r.split(',')[0] if ',' in r else None for i,r in dfo['time'].iteritems() ]
-dfo['day'] = dfo['day'].fillna( '0 day' )
-
-dfo['hour'] = [r.split(',')[1] if ',' in r else r for i,r in dfo['time'].iteritems() ]
-
-dfo.sample(5)
 #%% Save file. Commit and Push to Github Manually. 
 # WGS84 hexagon geometry
 df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
 
 
+
+# %%Tests
+
+df_all[ df_all.ind == 'co_conc']['values'].hist( bins = 25 )
+# %%
+df_all[ df_all.ind == 'co_conc'].plot( column = 'values' , legend = True , cmap='OrRd')
 
 # %%
