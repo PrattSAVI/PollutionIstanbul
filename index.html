@@ -176,8 +176,8 @@
             </p>
             <ul>
                 <li id='text'>Fine particle matter (PM 2.5), <a href="https://en.wikipedia.org/wiki/Particulate_pollution">wiki</a></li>
-                <li id='text'>NO2, causing asthma</li>
-                <li id='text'>Dust</li>
+                <li id='text'>NO2</li>
+                <li id='text'>CO</li>
             </ul>
 
             <p id='text'><a href='https://ads.atmosphere.copernicus.eu/cdsapp#!/home'>ADS</a> data source</p>
@@ -189,15 +189,14 @@
                     <option value="pm2p5_conc" selected="selected" >PM 2.5</option>
                     <option value="no2_conc" >NO2</option>
                     <option value="co_conc" >CO</option>
-                    <option value="ecff_conc" >Fosil Yakit</option>
                 </div>
             </select>
 
             <p id="text">Select a Time to Display</p>
             <select class="dropcontents" id="timeSelector" onchange="leaveChange()">
                 <div class="dropdown-content">
-                    <option value="15" >Yesterday (Analysis)</option>
-                    <option value="1 day, 15" selected="selected" >Today(Forecast)</option>
+                    <option value="0 day" >Yesterday (Analysis)</option>
+                    <option value="1 day" selected="selected" >Today(Forecast)</option>
                 </div>
             </select>
 
