@@ -186,8 +186,8 @@
             <p id="text">Select an Air Quality Indicator</p>
             <select class="dropcontents" id="indicatorSelector" onchange="leaveChange()">
                 <div class="dropdown-content">
-                    <option value="pm2p5_conc" selected="selected" >PM 2.5</option>
-                    <option value="no2_conc" >NO2</option>
+                    <option value="pm2p5_conc" >PM 2.5</option>
+                    <option value="no2_conc" selected="selected" >NO2</option>
                     <option value="co_conc" >CO</option>
                 </div>
             </select>
@@ -196,7 +196,7 @@
             <select class="dropcontents" id="timeSelector" onchange="leaveChange()">
                 <div class="dropdown-content">
                     <option value="0 day" >Yesterday (Analysis)</option>
-                    <option value="1 day" selected="selected" >Today(Forecast)</option>
+                    <option value="1 day" selected="selected" >The day before</option>
                 </div>
             </select>
 
@@ -230,7 +230,7 @@
     </div>
 
     <!--Map is Here-->
-    <div id='map' style='width: 100%; height: 800px;'></div>
+    <div id='map' style='width: 100%; height: 100%;'></div>
 
 
 </body>
@@ -246,8 +246,8 @@
     //Initialize all values.
     var min_val = 0;
     var med_val = 12;
-    var max_val = 24;
-    var desc = "<h5>PM 2.5</h5>The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight .[60] Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children.[61] Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
+    var max_val = 30;
+    var desc = "<h5>NO2</h5>For the public, chronic exposure to NO2 can cause respiratory effects including airway inflammation in healthy people and increased respiratory symptoms in people with asthma. NO2 creates ozone which causes eye irritation and exacerbates respiratory conditions, leading to increased visits to emergency departments and hospital admissions for respiratory issues, especially asthma.";
     document.getElementById('text_change').innerHTML = desc;
     document.getElementById('legend-min').innerHTML = min_val;
     document.getElementById('legend-med').innerHTML = med_val;
@@ -258,6 +258,8 @@
     // Define min, medium and max levels for choropleth application
     // Adjust the medium value to be EU standarts.
     function filterBy(indy, time1) {
+        map.setFilter('pollution', null); // Remove all filters
+
         var filters = ["all", ['==', 'ind', indy],
             ['==', 'time', time1]
         ];
@@ -265,28 +267,22 @@
 
         if (indy === 'pm2p5_conc') {
             min_val = 0;
-            med_val = 12;
-            max_val = 24;
+            med_val = 32;
+            max_val = 70;
             desc = "<h5>PM 2.5</h5>The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight. Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children. Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
         } else if (indy === 'no2_conc') {
-            min_val = 1;
-            med_val = 8;
-            max_val = 20;
+            min_val = 0;
+            med_val = 12;
+            max_val = 30;
             desc = "<h5>NO2</h5>For the public, chronic exposure to NO2 can cause respiratory effects including airway inflammation in healthy people and increased respiratory symptoms in people with asthma. NO2 creates ozone which causes eye irritation and exacerbates respiratory conditions, leading to increased visits to emergency departments and hospital admissions for respiratory issues, especially asthma.";
         } else if (indy === 'co_conc') {
-            min_val = 120;
-            med_val = 155;
-            max_val = 200;
-            desc = "<h5>CO</h5>Karbon Monoksit. Bunun Avrupa veya Amerikan standartlari icin kabul edilebilir degerini bulmak gerekiyor."
-        } else if (indy === 'ecff_conc') {
-            min_val = 0;
-            med_val = 0.00000000002;
-            max_val = 0.00000000005;
+            min_val = 10;
+            med_val = 125;
+            max_val = 250;
             desc = "<h5>CO</h5>Karbon Monoksit. Bunun Avrupa veya Amerikan standartlari icin kabul edilebilir degerini bulmak gerekiyor."
         }
+
     }
-
-
 
     // Mapping Starts Here
     mapboxgl.accessToken = 'pk.eyJ1IjoiY2Fua2FkaXIiLCJhIjoiY2pteXplNnEzMHF3YTNrcGx0dGd4MmJrdiJ9.zbhQ39YIdfZufTljuTSl1w';
@@ -301,14 +297,13 @@
 
         //Fit to Istanbul
         map.fitBounds([
-            [28.59, 41.36],
-            [30.15, 40.71]
+            [28.3, 41.36],
+            [29.8, 40.71]
         ]);
 
         d3.json('https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/data/IstanbulPollution_all.geojson',
             function(err, data) {
                 if (err) throw err;
-
 
                 //Add geojson to map as data -------------------
                 map.addSource('pollution', {
@@ -338,15 +333,16 @@
                 document.getElementById('timeSelector').onchange = function() { // Time
                     var e = document.getElementById("timeSelector");
                     time1 = e.options[e.selectedIndex].value
-                    console.log(time1);
+                        //console.log(time1);
                     filterBy(indy, time1);
                 };
 
                 document.getElementById('indicatorSelector').onchange = function() { //Indicator
                     var e = document.getElementById("indicatorSelector");
                     indy = e.options[e.selectedIndex].value
-                    console.log(indy);
+
                     filterBy(indy, time1);
+                    //console.log();
 
                     document.getElementById('text_change').innerHTML = desc;
                     document.getElementById('legend-min').innerHTML = min_val;
