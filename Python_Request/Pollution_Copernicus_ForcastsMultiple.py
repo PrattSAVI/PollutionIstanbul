@@ -112,8 +112,7 @@ def make_long( dfo , grid , c1 ): # Intrepolate and make a long list
     for ind in dfo['ind'].unique():
         for time in dfo['day'].unique():
             print( time , ind )
-            dft = dfo[ (dfo.ind == ind) & (dfo.day == time) ][['lat','lon','values']]
-            df_list = dft.set_index('values').to_records().tolist()
+            df_list = dfo[ (dfo.ind == ind) & (dfo.day == time) ][['lat','lon','values']].set_index('values').to_records().tolist()
 
             wa = []
             for x,y in c1:
@@ -141,12 +140,17 @@ print( 'Processing Complete, Mapping ->')
 
 df_all[ df_all.ind == 'co_conc'].plot( column = 'values' , legend = True , cmap='OrRd')
 
-#%%
-
-dft = dfo[ (dfo.ind == 'co_conc') & (dfo.day == '0 day') ][['lat','lon','values']]
-dft.set_index('values').to_records().tolist()
         
 #%% Save file. Commit and Push to Github Manually. 
-# WGS84 hexagon geometry
-df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
+df_all.to_file(r"C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson",driver="GeoJSON")
 
+# %%
+df_all.drop('geometry',axis = 1).sample( 10 )
+# %%
+
+for i in df_all['ind'].unique():
+    df_all[ df_all['ind'] == i ]['values'].hist(bins=25)
+    plt.title( i )
+    plt.show()
+
+# %%

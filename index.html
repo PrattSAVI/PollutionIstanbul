@@ -245,8 +245,8 @@
 
     //Initialize all values.
     var min_val = 0;
-    var med_val = 12;
-    var max_val = 30;
+    var med_val = 32;
+    var max_val = 60;
     var desc = "<h5>NO2</h5>For the public, chronic exposure to NO2 can cause respiratory effects including airway inflammation in healthy people and increased respiratory symptoms in people with asthma. NO2 creates ozone which causes eye irritation and exacerbates respiratory conditions, leading to increased visits to emergency departments and hospital admissions for respiratory issues, especially asthma.";
     document.getElementById('text_change').innerHTML = desc;
     document.getElementById('legend-min').innerHTML = min_val;
@@ -268,17 +268,17 @@
         if (indy === 'pm2p5_conc') {
             min_val = 0;
             med_val = 32;
-            max_val = 70;
+            max_val = 50;
             desc = "<h5>PM 2.5</h5>The effects of inhaling particulate matter that have been widely studied in humans and animals include asthma, lung cancer, respiratory diseases, cardiovascular disease, premature delivery, birth defects, low birth weight, and premature death. Inhalation of PM2.5 – PM10 is associated with elevated risk of adverse pregnancy outcomes, such as low birth weight. Maternal PM2.5 exposure during pregnancy is also associated with high blood pressure in children. Exposure to PM2.5 has been associated with greater reductions in birth weight than exposure to PM10.[62] PM exposure can cause inflammation, oxidative stress, endocrine disruption, and impaired oxygen transport access to the placenta, all of which are mechanisms for heightening the risk of low birth weight.";
         } else if (indy === 'no2_conc') {
             min_val = 0;
-            med_val = 12;
-            max_val = 30;
+            med_val = 32;
+            max_val = 60;
             desc = "<h5>NO2</h5>For the public, chronic exposure to NO2 can cause respiratory effects including airway inflammation in healthy people and increased respiratory symptoms in people with asthma. NO2 creates ozone which causes eye irritation and exacerbates respiratory conditions, leading to increased visits to emergency departments and hospital admissions for respiratory issues, especially asthma.";
         } else if (indy === 'co_conc') {
             min_val = 10;
-            med_val = 125;
-            max_val = 250;
+            med_val = 200;
+            max_val = 500;
             desc = "<h5>CO</h5>Karbon Monoksit. Bunun Avrupa veya Amerikan standartlari icin kabul edilebilir degerini bulmak gerekiyor."
         }
 
