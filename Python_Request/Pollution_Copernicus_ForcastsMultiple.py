@@ -12,8 +12,10 @@ import datetime as dt
 today = (dt.datetime.now()-dt.timedelta(days=1)).strftime( '%Y-%m-%d' )
 yesterday = (dt.datetime.now()-dt.timedelta(days=2)).strftime( '%Y-%m-%d' )
 dates = yesterday + '/' + today #From yesterday to today, how to get fro tomorrow.
+times = [ str(i).zfill(2) + ":00" for i in range(0,24,2)] #Times
 
 dates
+
 #%% Query API , Convert to dictionary. Saves NetCDF file locally and accesses it again. 
 #https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form
 
@@ -30,7 +32,7 @@ c.retrieve(
         'level': '0',
         'date': dates ,
         'type': 'analysis', #How does 'forecast' work, there is one forcast per day.
-        'time': [ '12:00','21:00','23:00'] ,
+        'time': times ,
         'leadtime_hour': '0',
         'area': [ 41.59, 28.15 , 40.54 , 30.34 ],
         'format': 'netcdf',
@@ -60,7 +62,7 @@ for ind in dd['data_vars'].keys(): #For each Indicator
         
         dfo = dfo.append( df )
 
-print( dfo['ind'].unique().tolist() )
+dfo.sample( 5 )
 
 
 #%% Correct time
@@ -71,7 +73,7 @@ dfo['day'] = dfo['day'].fillna( '0 day' )
 dfo['hour'] = [r.split(',')[1] if ',' in r else r for i,r in dfo['time'].iteritems() ]
 dfo = dfo.drop('time' , axis = 1)
 
-dfo = dfo[['lat','lon','ind','day','values']].groupby( ['lat','lon','ind','day'] ).mean().reset_index()
+dfo = dfo[['lat','lon','ind','day','values']].groupby( ['lat','lon','ind','day'] ).max().reset_index()
 
 dfo.sample(5)
 
@@ -83,7 +85,8 @@ import geopandas as gpd
 import numpy as np 
 
 grid = gpd.read_file( r"C:\Users\csucuogl\Desktop\WORK\MISC_TEST\Istanbul_AirQuality\Grid_64_Larger.shp" )
-centers = grid.centroid
+c1 = [(r.x,r.y) for i,r in grid.centroid.iteritems()]
+dfo['values'] = dfo['values'].round( 3 ) 
 
 def haversine(coord1, coord2): #Calculate Distance in Meters
     import math
@@ -103,25 +106,21 @@ def haversine(coord1, coord2): #Calculate Distance in Meters
     meters = round(meters)
     return meters
 
-def make_long( dfo , grid , centers ): # Intrepolate and make a long list
+def make_long( dfo , grid , c1 ): # Intrepolate and make a long list
     df_all = gpd.GeoDataFrame() #Empty Dataframe
 
     for ind in dfo['ind'].unique():
         for time in dfo['day'].unique():
             print( time , ind )
-            dft = dfo[ (dfo.ind == ind) & (dfo.day == time) ]
-            gdf = gpd.GeoDataFrame(dft, geometry=gpd.points_from_xy(dft.lon, dft.lat))
+            dft = dfo[ (dfo.ind == ind) & (dfo.day == time) ][['lat','lon','values']]
+            df_list = dft.set_index('values').to_records().tolist()
 
             wa = []
-            for i1,r1 in centers.iteritems():
-                dist = []
-                for i2,r2 in gdf.iterrows(): #Calculate the distanve of ech grid center to each measuement point
-                    t = haversine( (r1.x,r1.y) , (r2.geometry.x,r2.geometry.y) )
-                    dist.append( [t , r2['values']] )
-
+            for x,y in c1:
+                dist = [ ( haversine( (x,y) , (lon,lat) ) , value ) for value,lat,lon in df_list] #Calculate the distanve of ech grid center to each measuement point
+                   
                 temp = pd.DataFrame( data = dist , columns = ['dist','value'])
-                temp = temp[ temp['dist'] != 0 ] #Not itself
-                temp = temp.sort_values(by='dist',ascending=True)[:16] #Closest 32
+                temp = temp[ temp['dist'] != 0 ].sort_values(by='dist',ascending=True)[:16] #Closest 16 and not itself
                 temp['inv_dist'] = 1/temp['dist']
 
                 weighted_avg = np.average(temp['value'].tolist(), weights=temp['inv_dist'].tolist() )
@@ -134,21 +133,20 @@ def make_long( dfo , grid , centers ): # Intrepolate and make a long list
             cents['ind'] = ind
             
             df_all = df_all.append( cents )
+
     return df_all
 
-df_all = make_long( dfo , grid , centers )
-df_all.sample( 5 )
+df_all = make_long( dfo , grid , c1 )
+print( 'Processing Complete, Mapping ->')
+
+df_all[ df_all.ind == 'co_conc'].plot( column = 'values' , legend = True , cmap='OrRd')
+
+#%%
+
+dft = dfo[ (dfo.ind == 'co_conc') & (dfo.day == '0 day') ][['lat','lon','values']]
+dft.set_index('values').to_records().tolist()
         
 #%% Save file. Commit and Push to Github Manually. 
 # WGS84 hexagon geometry
 df_all.to_file(r'C:\Users\csucuogl\Documents\GitHub\PollutionIstanbul\data\IstanbulPollution_all.geojson',driver="GeoJSON")
 
-
-
-# %%Tests
-
-df_all[ df_all.ind == 'co_conc']['values'].hist( bins = 25 )
-# %%
-df_all[ df_all.ind == 'co_conc'].plot( column = 'values' , legend = True , cmap='OrRd')
-
-# %%
