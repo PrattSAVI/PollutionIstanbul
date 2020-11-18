@@ -8,5 +8,5 @@ Data is retrieved with a Python application and NetCDF data is converted to a pa
 App uses Mapbox GL for visualization.    
 App can be viewed [here](https://prattsavi.github.io/PollutionIstanbul/).
 
-This max pm2.5 levels measured throughout the day <pm 2.5 levels in Istanbul. <br>
+This max pm2.5 levels measured throughout the day in Istanbul. <br>
 <img src='https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/img/Cover.JPG'>
