@@ -5,6 +5,7 @@ Here is the main page for the data : <a href = 'https://ads.atmosphere.copernicu
 The dowload and API source is here: <a href = 'https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form'>Air Quality Forecasts</a>  
 
 Data is retrieved with a Python application and NetCDF data is converted to a pandas long list. 
+App uses Mapbox GL for visualization
 
-This is early morning <pm 2.5 levels in Istanbul. <br>
-<img src='https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/img/PM25.jpg'>
+This max pm2.5 levels measured throughout the day <pm 2.5 levels in Istanbul. <br>
+<img src='https://raw.githubusercontent.com/PrattSAVI/PollutionIstanbul/master/img/Cover.JPG'>
